@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from .forms import OrderForm
+from .filters import OrderFilter
 
 # Create your views here.
 from django.views import View
@@ -39,9 +40,12 @@ class CustomerView(View):
         customer = Customer.objects.get(id=pk)
         orders = customer.order_set.all()
         order_count = orders.count()
+        my_filter = OrderFilter(request.GET, queryset=orders)
+        orders = my_filter.qs
         context = {'customer': customer,
                    'orders': orders,
-                   'order_count': order_count
+                   'order_count': order_count,
+                   'my_filter': my_filter
                    }
         return render(request, 'accounts/customer.html', context)
 
