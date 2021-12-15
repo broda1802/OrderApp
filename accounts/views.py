@@ -1,14 +1,15 @@
 from django.shortcuts import render, redirect
-from .forms import OrderForm
+from .forms import OrderForm, CreateUserForm
 from .filters import OrderFilter
-
-# Create your views here.
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
 from django.views import View
-
 from accounts.models import Product, Order, Customer
+from django.contrib.auth.mixins import LoginRequiredMixin
+# Create your views here.
 
 
-class HomeView(View):
+class HomeView(LoginRequiredMixin, View):
 
     def get(self, request):
         orders = Order.objects.all()
@@ -27,14 +28,14 @@ class HomeView(View):
         return render(request, 'accounts/dashboard.html', context)
 
 
-class ProductView(View):
+class ProductView(LoginRequiredMixin, View):
 
     def get(self, request):
         products = Product.objects.all()
         return render(request, 'accounts/products.html', {'products': products})
 
 
-class CustomerView(View):
+class CustomerView(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         customer = Customer.objects.get(id=pk)
@@ -50,7 +51,7 @@ class CustomerView(View):
         return render(request, 'accounts/customer.html', context)
 
 
-class CreateOrderView(View):
+class CreateOrderView(LoginRequiredMixin, View):
 
     def get(self, request):
         form = OrderForm()
@@ -69,7 +70,7 @@ class CreateOrderView(View):
         return render(request, 'accounts/order_form.html', context)
 
 
-class UpdateOrderView(View):
+class UpdateOrderView(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         order = Order.objects.get(id=pk)
@@ -89,7 +90,7 @@ class UpdateOrderView(View):
         return render(request, 'accounts/order_form.html', context)
 
 
-class DeleteOrderView(View):
+class DeleteOrderView(LoginRequiredMixin, View):
     def get(self, request, pk):
         order = Order.objects.get(id=pk)
         context = {'order': order
@@ -100,6 +101,51 @@ class DeleteOrderView(View):
         order = Order.objects.get(id=pk)
         order.delete()
         return redirect('home')
+
+
+class LoginView(View):
+    def get(self, request):
+        form = CreateUserForm
+        context = {'form': form
+                   }
+        return render(request, 'accounts/login.html', context)
+
+    def post(self, request):
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            messages.info(request, 'Username or password is incorrect')
+            return redirect('login')
+
+
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        return redirect('login')
+
+
+class RegisterView(View):
+    def get(self, request):
+        form = CreateUserForm
+        context = {'form': form
+                   }
+        return render(request, 'accounts/register.html', context)
+
+    def post(self, request):
+        form = CreateUserForm(request.POST)
+        if form.is_valid():
+            form.save()
+            user = form.cleaned_data.get('username')
+            messages.success(request, 'Account was created for ' + user)
+            return redirect('login')
+
+        context = {'form': form
+                   }
+        return render(request, 'accounts/register.html', context)
 
 
 

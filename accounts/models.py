@@ -48,6 +48,5 @@ class Order(models.Model):
     status = models.CharField(max_length=200, null=True, choices=STATUS)
     note = models.CharField(max_length=1000, null=True)
 
-
     def __str__(self):
         return self.customer.name + " " + self.product.name

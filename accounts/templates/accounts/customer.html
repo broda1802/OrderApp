@@ -39,7 +39,8 @@
 	<div class="col">
 		<div class="card card-body">
 			<form method="get">
-                {{ my_filter.form}}
+
+                {{ my_filter.form.as_p }}
 
 		    <button class="btn btn-primary" type="submit">Search</button>
 		  </form>
